@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>금·은·동 게임</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+  :root{--gold:#c9973a;--silver:#8a8fa0;--bronze:#a0632a;--bg:#0e0e12;--surface:#18181f;--surface2:#22222c;--border:rgba(255,255,255,0.08);--text:#e8e8f0;--muted:#6b6b80;--accent:#5b6af0;--win:#3dcf82;--lose:#e04f5f;--draw:#e0b84f;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:2rem 1rem;}
+  h1{font-size:1.4rem;font-weight:700;letter-spacing:0.2em;margin-bottom:0.25rem;background:linear-gradient(90deg,var(--gold),var(--silver),var(--bronze));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .subtitle{font-size:0.75rem;color:var(--muted);letter-spacing:0.1em;margin-bottom:1.5rem;}
+  .gc{width:100%;max-width:700px;display:flex;flex-direction:column;gap:1rem;}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem;}
+  .pr{display:grid;grid-template-columns:1fr auto 1fr;gap:0.75rem;align-items:center;}
+  .pc{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0.85rem 1rem;transition:border-color 0.2s;}
+  .pc.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+  .pn{font-size:0.75rem;font-weight:700;letter-spacing:0.05em;margin-bottom:0.6rem;color:var(--muted);text-transform:uppercase;}
+  .rg{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+  .res{background:var(--surface);border-radius:6px;padding:4px 6px;text-align:center;}
+  .rl{font-size:0.6rem;color:var(--muted);display:block;}
+  .rv{font-size:0.9rem;font-weight:700;display:block;}
+  .rg-g .rv{color:var(--gold);}.rg-s .rv{color:var(--silver);}.rg-b .rv{color:var(--bronze);}.rg-c .rv{color:var(--accent);}
+  .vs{text-align:center;font-size:0.75rem;color:var(--muted);}
+  .pot{font-size:1.4rem;font-weight:700;color:var(--draw);display:block;margin-top:2px;}
+  .ta{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;}
+  .tb{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.75rem;}
+  .tbl{font-size:0.65rem;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase;margin-bottom:0.5rem;}
+  .tt{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;align-items:center;}
+  .rabbit{display:inline-flex;flex-direction:column;align-items:center;}
+  .rabbit svg{width:30px;height:30px;}
+  .rl2{font-size:0.6rem;font-weight:700;margin-top:1px;}
+  .rg-gold .rl2{color:var(--gold);}.rg-silver .rl2{color:var(--silver);}.rg-bronze .rl2{color:var(--bronze);}
+  .th{font-size:0.8rem;color:var(--muted);font-style:italic;}
+  .pb{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;justify-content:space-between;}
+  .pl{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;}
+  .badge{font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;border-radius:20px;padding:4px 12px;border:1px solid;}
+  .b-you{background:rgba(91,106,240,0.15);color:var(--accent);border-color:var(--accent);}
+  .b-opp{background:rgba(224,79,95,0.15);color:var(--lose);border-color:var(--lose);}
+  .b-res{background:rgba(61,207,130,0.15);color:var(--win);border-color:var(--win);}
+  .b-bet{background:rgba(224,184,79,0.15);color:var(--draw);border-color:var(--draw);}
+  .b-wait{background:rgba(107,107,128,0.15);color:var(--muted);border-color:var(--muted);}
+  .ri{font-size:0.75rem;color:var(--muted);}
+  .aa{margin-top:0.75rem;display:flex;flex-direction:column;gap:0.75rem;}
+  .rpick{display:flex;gap:10px;flex-wrap:wrap;}
+  .rpb{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:all 0.15s;font-family:'Noto Sans KR',sans-serif;}
+  .rpb:hover{background:rgba(255,255,255,0.05);}
+  .rpb:disabled{opacity:0.3;cursor:not-allowed;}
+  .rpb svg{width:34px;height:34px;}
+  .rpl{font-size:0.68rem;color:var(--muted);}
+  .rpc{font-size:0.75rem;font-weight:700;}
+  .br{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  button.gb{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 18px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:0.8rem;color:var(--text);transition:all 0.15s;}
+  button.gb:hover{background:rgba(255,255,255,0.06);}
+  button.gb:active{transform:scale(0.97);}
+  button.gb:disabled{opacity:0.35;cursor:not-allowed;}
+  button.gb.p{background:var(--accent);border-color:var(--accent);color:#fff;}
+  button.gb.p:hover{background:#4a59e0;}
+  button.gb.d{background:rgba(224,79,95,0.2);border-color:var(--lose);color:var(--lose);}
+  button.gb.sm{padding:5px 12px;font-size:0.72rem;}
+  input.ti{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:0.9rem;width:100%;}
+  input.ti:focus{outline:none;border-color:var(--accent);}
+  input.ni{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Noto Sans KR',sans-serif;font-size:0.85rem;width:80px;text-align:center;}
+  input.ni:focus{outline:none;border-color:var(--accent);}
+  .stepper{display:flex;align-items:center;gap:4px;}
+  .sb{background:var(--surface2);border:1px solid var(--border);border-radius:6px;width:30px;height:34px;cursor:pointer;font-size:1rem;color:var(--text);display:flex;align-items:center;justify-content:center;font-family:'Noto Sans KR',sans-serif;}
+  .sb:hover{background:rgba(255,255,255,0.08);}
+  .wh{font-size:0.72rem;color:var(--muted);}
+  .wm{color:var(--win);font-weight:500;font-size:0.9rem;}
+  .lm{color:var(--lose);font-weight:500;font-size:0.9rem;}
+  .dm{color:var(--draw);font-weight:500;font-size:0.9rem;}
+  .go{text-align:center;padding:2.5rem 1rem;}
+  .go-icon{font-size:3rem;margin-bottom:1rem;}
+  .go-title{font-size:1.6rem;font-weight:700;margin-bottom:0.5rem;}
+  .go-sub{color:var(--muted);font-size:0.85rem;margin-bottom:1.5rem;}
+  .rc{font-size:2rem;font-weight:700;letter-spacing:0.3em;color:var(--draw);margin:0.5rem 0;}
+  .wd{display:inline-block;animation:blink 1.2s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.2;}}
+  .cb{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;cursor:pointer;font-size:0.72rem;color:var(--muted);font-family:'Noto Sans KR',sans-serif;}
+  .cb:hover{color:var(--text);}
+  .et{font-size:0.78rem;color:var(--lose);margin-top:6px;}
+  .ro{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem;}
+  .rm{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:1.75rem;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;}
+  .rm h2{font-size:1rem;font-weight:700;margin-bottom:1.25rem;}
+  .rb{margin-bottom:1.1rem;}
+  .rb h3{font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;}
+  .rb p,.rb li{font-size:0.82rem;color:var(--text);line-height:1.75;}
+  .rb ul{padding-left:1.1rem;}
+  .rb li{margin-bottom:2px;}
+  .rd{border:none;border-top:1px solid var(--border);margin:1rem 0;}
+</style>
+</head>
+<body>
+<h1>금·은·동 게임</h1>
+<p class="subtitle" id="top-sub">온라인 멀티플레이어</p>
+<div class="gc" id="app"></div>
+<div id="rule-overlay" style="display:none;" class="ro" onclick="if(event.target===this)hideRule()">
+  <div class="rm">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:.75rem"><button class="gb sm" onclick="hideRule()">닫기</button></div>
+    <h2>게임 규칙</h2>
+    <div class="rb"><h3>기본 구성</h3><ul>
+      <li>각 플레이어: 금토끼 3개(3g), 은토끼 10개(2g), 동토끼 20개(1g), 칩 30개</li>
+      <li>라운드 시작마다 양측 3칩씩 팟에 투입 (chips에서 차감)</li>
+    </ul></div>
+    <hr class="rd">
+    <div class="rb"><h3>라운드 진행</h3><ul>
+      <li>선 플레이어가 먼저 토끼를 올린다 (최대 12g)</li>
+      <li>후 플레이어는 선 무게를 확인 후 ±2g 범위 내에서 올린다</li>
+      <li>양측 무게 확인 후 배팅 시작 (선이 먼저)</li>
+    </ul></div>
+    <hr class="rd">
+    <div class="rb"><h3>배팅 (포커 방식)</h3><ul>
+      <li>레이즈 → 상대에게 콜/레이즈/폴드 기회</li>
+      <li>체크 → 상대에게 레이즈/체크 기회 (상대도 체크하면 승부)</li>
+      <li>콜 → 즉시 승부 / 폴드 → 상대가 팟 획득 (트레이 비공개)</li>
+    </ul></div>
+    <hr class="rd">
+    <div class="rb"><h3>승부 (콜 또는 체크-체크 시)</h3><ul>
+      <li>무게 무관 — 금 개수 많은 쪽 승리. 금 같으면 은, 은 같으면 동 비교</li>
+      <li>무승부 시 팟은 다음 라운드로 이월</li>
+    </ul></div>
+    <hr class="rd">
+    <div class="rb"><h3>종료 조건</h3><p>토끼를 모두 소진하거나 칩이 0이 되면 게임 종료. 칩이 많은 쪽이 승리.</p></div>
+    <div class="br" style="margin-top:1.5rem;justify-content:flex-end"><button class="gb p" onclick="hideRule()">확인</button></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+import { getDatabase, ref, set, get, onValue, update, remove } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD1rwjf66eJRKaGKs6NkRcknFVuKNpIO0c",
+  authDomain: "goldsliverbronze.firebaseapp.com",
+  databaseURL: "https://goldsliverbronze-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "goldsliverbronze",
+  storageBucket: "goldsliverbronze.firebasestorage.app",
+  messagingSenderId: "524089989487",
+  appId: "1:524089989487:web:332f05d9efc97062f4f09a"
+};
+const fbApp = initializeApp(firebaseConfig);
+const db = getDatabase(fbApp);
+
+// ── 전역 상태 ──
+let ME = {id:'',name:'',role:''};
+let roomCode = '';
+let unsub = null;
+let G = null;          // Firebase 전체 방 데이터
+let localTray = [];    // 아직 확정 안 한 내 트레이 (로컬)
+let localW = 0;
+
+// ── 유틸 ──
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function makeCode(){ return Math.random().toString(36).slice(2,6).toUpperCase(); }
+function opp(){ return ME.role==='host'?'guest':'host'; }
+function wt(t){ return t.reduce((s,x)=>s+(x==='gold'?3:x==='silver'?2:1),0); }
+
+function compare(ht, gt){
+  const hg=ht.filter(x=>x==='gold').length, gg=gt.filter(x=>x==='gold').length;
+  if(hg!==gg) return hg>gg?'host':'guest';
+  const hs=ht.filter(x=>x==='silver').length, gs=gt.filter(x=>x==='silver').length;
+  if(hs!==gs) return hs>gs?'host':'guest';
+  const hb=ht.filter(x=>x==='bronze').length, gb=gt.filter(x=>x==='bronze').length;
+  if(hb!==gb) return hb>gb?'host':'guest';
+  return 'draw';
+}
+function trayStr(t){
+  if(!t||!t.length) return '없음';
+  const g=t.filter(x=>x==='gold').length,s=t.filter(x=>x==='silver').length,b=t.filter(x=>x==='bronze').length;
+  return [g&&`금${g}`,s&&`은${s}`,b&&`동${b}`].filter(Boolean).join('/');
+}
+
+function rRef(c){ return ref(db,`rooms/${c}`); }
+function sRef(c){ return ref(db,`rooms/${c}/state`); }
+
+// ── 초기 게임 상태 ──
+// 칩: 30에서 시작, 라운드 비용 3씩은 nextRound에서 차감
+// initState는 라운드 비용 차감 전 상태 (방 생성 시점)
+function mkPlayer(){ return {gold:3,silver:10,bronze:20,chips:27,tray:[],weight:0}; }
+// 첫 라운드: 각자 3칩 이미 팟에 넣은 상태로 시작
+function initState(){
+  return {
+    round:1,
+    // phase: first_host, first_guest, second_host, second_guest,
+    //        bet_host, bet_guest, reveal, fold_host, fold_guest
+    phase:'first_host',
+    // betState: 'open'(아무도 레이즈 안함) or 'raised'(누군가 레이즈)
+    betState:'open',
+    // 선공: host
+    firstPlayer:'host',
+    pot:6,          // 3+3 이미 차감
+    hostBet:0,      // 이번 라운드 베팅액 (팟 외 추가분)
+    guestBet:0,
+    winner:null,
+    lastPot:0,
+    host:mkPlayer(),
+    guest:mkPlayer(),
+  };
+}
+
+// ── 토끼 SVG ──
+function rsvg(color){
+  const c=color==='gold'?'#c9973a':color==='silver'?'#8a8fa0':'#a0632a';
+  const d=color==='gold'?'#8a6420':color==='silver'?'#5a5f6a':'#6a3a1a';
+  return `<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="10" cy="9" rx="3" ry="7" fill="${c}" stroke="${d}" stroke-width="1"/>
+    <ellipse cx="22" cy="9" rx="3" ry="7" fill="${c}" stroke="${d}" stroke-width="1"/>
+    <ellipse cx="10" cy="8" rx="1.4" ry="4" fill="${d}" opacity="0.35"/>
+    <ellipse cx="22" cy="8" rx="1.4" ry="4" fill="${d}" opacity="0.35"/>
+    <ellipse cx="16" cy="21" rx="9" ry="8" fill="${c}" stroke="${d}" stroke-width="1"/>
+    <circle cx="13" cy="19" r="1.4" fill="${d}"/>
+    <circle cx="19" cy="19" r="1.4" fill="${d}"/>
+    <ellipse cx="16" cy="22" rx="1.8" ry="1" fill="${d}" opacity="0.45"/>
+    <circle cx="13.4" cy="18.4" r="0.45" fill="white" opacity="0.7"/>
+    <circle cx="19.4" cy="18.4" r="0.45" fill="white" opacity="0.7"/>
+  </svg>`;
+}
+
+function tokensHTML(tray, hidden){
+  if(hidden) return '<span class="th">?</span>';
+  if(!tray||!tray.length) return '<span class="th">비어 있음</span>';
+  return tray.map(t=>`<div class="rabbit rg-${t}">${rsvg(t)}<span class="rl2">${t==='gold'?'금':t==='silver'?'은':'동'}</span></div>`).join('');
+}
+
+function pickBtn(type, remaining, maxW){
+  const curW = localW;
+  const addW = type==='gold'?3:type==='silver'?2:1;
+  const label = type==='gold'?'금토끼(3g)':type==='silver'?'은토끼(2g)':'동토끼(1g)';
+  const colorVar = type==='gold'?'var(--gold)':type==='silver'?'var(--silver)':'var(--bronze)';
+  const disabled = remaining<=0 || curW+addW>maxW;
+  return `<button class="rpb" onclick="addR('${type}')" ${disabled?'disabled':''}>
+    ${rsvg(type)}
+    <span class="rpl">${label}</span>
+    <span class="rpc" style="color:${colorVar}">×${remaining}</span>
+  </button>`;
+}
+
+// ── 룰 ──
+window.showRule=()=>document.getElementById('rule-overlay').style.display='flex';
+window.hideRule=()=>document.getElementById('rule-overlay').style.display='none';
+
+// ── 로비 ──
+function renderLobby(){
+  document.getElementById('app').innerHTML=`
+  <div class="panel">
+    <div style="margin-bottom:1rem">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">닉네임</div>
+      <input class="ti" id="ni" maxlength="12" placeholder="이름 입력 (최대 12자)"/>
+    </div>
+    <div class="br">
+      <button class="gb p" onclick="createRoom()">방 만들기</button>
+      <button class="gb" onclick="toggleJoin()">코드로 입장</button>
+      <button class="gb sm" onclick="showRule()">룰 보기</button>
+    </div>
+    <div id="ja" style="display:none;margin-top:1rem">
+      <div style="font-size:.72rem;color:var(--muted);margin-bottom:6px">방 코드 (4자리)</div>
+      <div class="br">
+        <input class="ti" id="ci" maxlength="4" placeholder="ex) AB3K" style="width:120px;text-transform:uppercase"/>
+        <button class="gb p" onclick="joinRoom()">입장</button>
+      </div>
+    </div>
+    <div id="lerr" class="et"></div>
+  </div>`;
+}
+window.toggleJoin=()=>{const a=document.getElementById('ja');a.style.display=a.style.display==='none'?'block':'none';}
+
+function renderWaiting(){
+  document.getElementById('app').innerHTML=`
+  <div class="panel" style="text-align:center">
+    <div style="font-size:.8rem;color:var(--muted);margin-bottom:.5rem">방 코드</div>
+    <div class="rc">${roomCode}</div>
+    <button class="cb" onclick="copyCode()">복사</button>
+    <div style="margin-top:1.5rem;font-size:.85rem;color:var(--muted)">상대가 입장하길 기다리는 중<span class="wd">...</span></div>
+    <div class="br" style="justify-content:center;margin-top:1.5rem">
+      <button class="gb sm" onclick="showRule()">룰 보기</button>
+      <button class="gb sm d" onclick="leaveRoom()">나가기</button>
+    </div>
+  </div>`;
+}
+window.copyCode=()=>navigator.clipboard.writeText(roomCode).then(()=>{const b=document.querySelector('.cb');if(b){b.textContent='복사됨!';setTimeout(()=>b.textContent='복사',1500);}});
+
+// ── 게임 렌더 ──
+function renderGame(s){
+  const me=s[ME.role], op=s[opp()];
+  const oppName=opp()==='host'?(G.hostName||'상대'):(G.guestName||'상대');
+  const ph=s.phase;
+
+  const iFirst=(ph==='first_host'&&ME.role==='host')||(ph==='first_guest'&&ME.role==='guest');
+  const iSecond=(ph==='second_host'&&ME.role==='host')||(ph==='second_guest'&&ME.role==='guest');
+  const iBet=(ph==='bet_host'&&ME.role==='host')||(ph==='bet_guest'&&ME.role==='guest');
+  const oBet=(ph==='bet_host'&&ME.role==='guest')||(ph==='bet_guest'&&ME.role==='host');
+  const myFold=(ph==='fold_host'&&ME.role==='host')||(ph==='fold_guest'&&ME.role==='guest');
+  const opFold=(ph==='fold_host'&&ME.role==='guest')||(ph==='fold_guest'&&ME.role==='host');
+  const isReveal=ph==='reveal';
+
+  // 상대 트레이: second 이후엔 무게 공개, reveal에서만 내용 공개
+  const showOpW=['second_host','second_guest','bet_host','bet_guest','fold_host','fold_guest','reveal'].includes(ph);
+  const showOpTray=isReveal;
+  let opTray;
+  if(showOpTray) opTray=tokensHTML(op.tray||[],false);
+  else if(showOpW&&op.tray&&op.tray.length) opTray=`<span class="th">${op.weight}g</span>`;
+  else opTray=`<span class="th">?</span>`;
+
+  let badge='';
+  if(iFirst||iSecond) badge=`<span class="badge b-you">${iFirst?'선':'후'} — 토끼 올리기</span>`;
+  else if(iBet) badge=`<span class="badge b-bet">배팅 — 내 차례</span>`;
+  else if(oBet) badge=`<span class="badge b-opp">배팅 — 상대 차례</span>`;
+  else if(isReveal) badge=`<span class="badge b-res">결과 공개</span>`;
+  else if(ph.startsWith('fold')) badge=`<span class="badge b-res">${opFold?'상대 폴드':'폴드'}</span>`;
+  else badge=`<span class="badge b-wait">상대 차례</span>`;
+
+  let action='';
+  if(iFirst){
+    // 선: 최대 12g
+    const used={gold:0,silver:0,bronze:0}; localTray.forEach(t=>used[t]++);
+    action=buildTrayUI(me,used,1,12);
+  } else if(iSecond){
+    const oppW=op.weight||0;
+    const minW=Math.max(1,oppW-2), maxW=Math.min(12,oppW+2);
+    const avail=me.gold*3+me.silver*2+me.bronze;
+    const effMax=Math.min(maxW,avail);
+    const used={gold:0,silver:0,bronze:0}; localTray.forEach(t=>used[t]++);
+    action=buildTrayUI(me,used,minW,effMax);
+  } else if(iBet){
+    const myBet=ME.role==='host'?s.hostBet:s.guestBet;
+    const opBet=ME.role==='host'?s.guestBet:s.hostBet;
+    action=buildBetUI(myBet,opBet,me.chips,s.betState);
+  } else if(oBet){
+    action=`<div style="color:var(--muted);font-size:.8rem">상대가 생각 중...</div>`;
+  } else if(isReveal){
+    const w=s.winner, lp=s.lastPot;
+    action=`<div class="${w===ME.role?'wm':w==='draw'?'dm':'lm'}">${w===ME.role?`승리! 팟 ${lp}칩 획득`:w==='draw'?`무승부. 팟 ${lp}칩 이월`:`패배. 상대가 팟 ${lp}칩 획득`}</div>
+    <div style="font-size:.75rem;color:var(--muted);margin-top:4px">나: ${trayStr(me.tray)} / 상대: ${trayStr(op.tray)}</div>
+    <div class="br" style="margin-top:8px">${ME.role==='host'
+      ?`<button class="gb p" onclick="nextRound()">다음 라운드</button>`
+      :`<div style="color:var(--muted);font-size:.8rem">방장이 다음 라운드를 시작합니다...</div>`}</div>`;
+  } else if(opFold){
+    action=`<div class="wm">상대가 폴드. 팟 ${s.lastPot}칩 획득!</div>
+    <div class="br" style="margin-top:8px">${ME.role==='host'
+      ?`<button class="gb p" onclick="nextRound()">다음 라운드</button>`
+      :`<div style="color:var(--muted);font-size:.8rem">방장이 다음 라운드를 시작합니다...</div>`}</div>`;
+  } else if(myFold){
+    action=`<div class="lm">폴드. 상대가 팟 ${s.lastPot}칩 획득.</div>
+    <div class="br" style="margin-top:8px">${ME.role==='host'
+      ?`<button class="gb p" onclick="nextRound()">다음 라운드</button>`
+      :`<div style="color:var(--muted);font-size:.8rem">방장이 다음 라운드를 시작합니다...</div>`}</div>`;
+  } else {
+    action=`<div style="color:var(--muted);font-size:.8rem">상대 차례입니다...</div>`;
+  }
+
+  const myTrayShow=(iFirst||iSecond)
+    ?(localTray.length?tokensHTML(localTray,false):'<span class="th">비어 있음</span>')
+    :(!myFold?tokensHTML(me.tray||[],false):'<span class="th">비공개</span>');
+
+  document.getElementById('app').innerHTML=`
+  <div class="panel">
+    <div class="pr">
+      <div class="pc ${iFirst||iSecond||iBet?'active':''}">
+        <div class="pn">${ME.name}</div>
+        <div class="rg">
+          <div class="res rg-g"><span class="rl">금</span><span class="rv">${me.gold}</span></div>
+          <div class="res rg-s"><span class="rl">은</span><span class="rv">${me.silver}</span></div>
+          <div class="res rg-b"><span class="rl">동</span><span class="rv">${me.bronze}</span></div>
+          <div class="res rg-c"><span class="rl">칩</span><span class="rv">${me.chips}</span></div>
+        </div>
+      </div>
+      <div class="vs">
+        <div style="font-weight:700;font-size:.8rem;color:var(--muted)">VS</div>
+        <div style="font-size:.65rem;color:var(--muted);margin-top:4px">팟</div>
+        <span class="pot">${s.pot}</span>
+      </div>
+      <div class="pc ${oBet?'active':''}">
+        <div class="pn">${oppName}</div>
+        <div class="rg">
+          <div class="res rg-c" style="grid-column:1/-1"><span class="rl">칩</span><span class="rv">${op.chips}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="pb">
+      <div class="pl">${badge}<span class="ri">라운드 ${s.round} &nbsp;|&nbsp; 팟 <strong style="color:var(--draw)">${s.pot}</strong>칩</span></div>
+      <button class="gb sm" onclick="showRule()">룰 보기</button>
+    </div>
+    <div class="ta" style="margin-top:.85rem">
+      <div class="tb">
+        <div class="tbl">내 트레이 ${(iFirst||iSecond)?`(${localW}g)`:me.tray&&me.tray.length?`(${me.weight}g)`:''}</div>
+        <div class="tt">${myTrayShow}</div>
+      </div>
+      <div class="tb">
+        <div class="tbl">상대 트레이</div>
+        <div class="tt">${opTray}</div>
+      </div>
+    </div>
+    <div class="aa">${action}</div>
+  </div>`;
+}
+
+function buildTrayUI(me, used, minW, maxW){
+  const curW=localW;
+  const canConfirm=localTray.length>0&&curW>=minW&&curW<=maxW;
+  const hint=minW>1?`범위: ${minW}g ~ ${maxW}g`:`최대 ${maxW}g`;
+  return `
+  <div class="wh">${hint} &nbsp; 현재: <strong style="color:var(--text)">${curW}g</strong>${curW<minW&&curW>0?` <span style="color:var(--lose)">최소 ${minW}g 필요</span>`:''}</div>
+  <div class="rpick">
+    ${pickBtn('gold',me.gold-used.gold,maxW)}
+    ${pickBtn('silver',me.silver-used.silver,maxW)}
+    ${pickBtn('bronze',me.bronze-used.bronze,maxW)}
+  </div>
+  <div class="br">
+    <button class="gb" onclick="undoR()">↩ 되돌리기</button>
+    <button class="gb p" onclick="confirmTray()" ${!canConfirm?'disabled':''}>확정 (${curW}g)</button>
+  </div>`;
+}
+
+function buildBetUI(myBet, opBet, myChips, betState){
+  // betState: 'open' = 아무도 레이즈 안함 (체크 가능)
+  //           'raised' = 상대가 레이즈함 (콜 or 레이즈 or 폴드)
+  const isOpen=betState==='open';
+  const minR=opBet+1;
+  // 레이즈 가능 최대: 내 칩 전부
+  // 단 opBet보다 많아야 함
+  return `
+  <div class="wh">현재 베팅 — 나: ${myBet} / 상대: ${opBet}</div>
+  <div class="br" style="align-items:flex-end;gap:12px;flex-wrap:wrap">
+    <div>
+      <div style="font-size:.68rem;color:var(--muted);margin-bottom:4px">레이즈 총액 (최소 ${minR})</div>
+      <div class="stepper">
+        <button class="sb" onclick="stepBet(-1)">−</button>
+        <input class="ni" type="number" id="bet-in" min="${minR}" max="${myChips}" value="${minR}" step="1" oninput="clampBet()"/>
+        <button class="sb" onclick="stepBet(1)">+</button>
+      </div>
+    </div>
+    <button class="gb p" onclick="doRaise()">레이즈</button>
+    <button class="gb" onclick="doCall()">${isOpen?'체크':'콜 ('+opBet+'칩)'}</button>
+    <button class="gb d" onclick="doFold()">폴드</button>
+  </div>`;
+}
+
+function renderGameover(s){
+  const me=s[ME.role],op=s[opp()];
+  const win=me.chips>op.chips,draw=me.chips===op.chips;
+  document.getElementById('app').innerHTML=`
+  <div class="panel"><div class="go">
+    <div class="go-icon">${win?'🏆':draw?'🤝':'💀'}</div>
+    <div class="go-title ${win?'wm':draw?'dm':'lm'}">${win?'승리':draw?'무승부':'패배'}</div>
+    <div class="go-sub">최종 칩 — 나: ${me.chips} / 상대: ${op.chips}</div>
+    <div class="br" style="justify-content:center">
+      <button class="gb" onclick="showRule()">룰 보기</button>
+      ${ME.role==='host'?`<button class="gb p" onclick="restartGame()">다시 하기</button>`:`<div style="color:var(--muted);font-size:.8rem">방장이 재시작할 수 있습니다</div>`}
+      <button class="gb d sm" onclick="leaveRoom()">나가기</button>
+    </div>
+  </div></div>`;
+}
+
+// ── 방 생성/입장 ──
+window.createRoom=async function(){
+  const name=(document.getElementById('ni')?.value||'').trim();
+  if(!name){setErr('이름을 입력해주세요');return;}
+  ME.id=uid();ME.name=name;ME.role='host';
+  roomCode=makeCode();
+  await set(rRef(roomCode),{hostId:ME.id,hostName:name,guestId:'',guestName:'',status:'waiting',state:initState()});
+  document.getElementById('top-sub').textContent=`방 코드: ${roomCode}`;
+  listenRoom();renderWaiting();
+};
+
+window.joinRoom=async function(){
+  const name=(document.getElementById('ni')?.value||'').trim();
+  const code=(document.getElementById('ci')?.value||'').trim().toUpperCase();
+  if(!name){setErr('이름을 입력해주세요');return;}
+  if(code.length!==4){setErr('방 코드는 4자리입니다');return;}
+  const snap=await get(rRef(code));
+  if(!snap.exists()){setErr('방이 없습니다');return;}
+  const data=snap.val();
+  if(data.status!=='waiting'){setErr('이미 게임 중인 방입니다');return;}
+  ME.id=uid();ME.name=name;ME.role='guest';
+  roomCode=code;
+  await update(rRef(code),{guestId:ME.id,guestName:name,status:'playing'});
+  document.getElementById('top-sub').textContent=`방 코드: ${roomCode}`;
+  listenRoom();
+};
+
+window.leaveRoom=async function(){
+  if(unsub){unsub();unsub=null;}
+  if(roomCode&&ME.role==='host') await remove(rRef(roomCode));
+  roomCode='';ME={id:'',name:'',role:''};
+  document.getElementById('top-sub').textContent='온라인 멀티플레이어';
+  renderLobby();
+};
+
+function listenRoom(){
+  if(unsub) unsub();
+  unsub=onValue(rRef(roomCode),(snap)=>{
+    if(!snap.exists()){alert('방이 사라졌습니다.');leaveRoom();return;}
+    G=snap.val();
+    const s=G.state;
+    if(!s) return;
+    if(s.gameOver){renderGameover(s);return;}
+    if(G.status==='waiting'&&ME.role==='host'){renderWaiting();return;}
+    if(G.status==='playing'){
+      // 내 차례가 아니면 로컬 트레이 초기화
+      const myPlacing=
+        (s.phase==='first_host'&&ME.role==='host')||
+        (s.phase==='first_guest'&&ME.role==='guest')||
+        (s.phase==='second_host'&&ME.role==='host')||
+        (s.phase==='second_guest'&&ME.role==='guest');
+      if(!myPlacing){localTray=[];localW=0;}
+      renderGame(s);
+    }
+  });
+}
+
+// ── 트레이 ──
+window.addR=function(type){
+  if(!G||!G.state) return;
+  const s=G.state, me=s[ME.role];
+  const isSecond=(s.phase==='second_host'&&ME.role==='host')||(s.phase==='second_guest'&&ME.role==='guest');
+  const oppW=isSecond?(ME.role==='host'?s.guest.weight:s.host.weight):0;
+  const maxW=isSecond?Math.min(12,oppW+2):12;
+  const addW=type==='gold'?3:type==='silver'?2:1;
+  if(localW+addW>maxW) return;
+  const used={gold:0,silver:0,bronze:0}; localTray.forEach(t=>used[t]++);
+  if(me[type]-used[type]<=0) return;
+  localTray.push(type); localW=wt(localTray);
+  renderGame(s);
+};
+
+window.undoR=function(){
+  if(!localTray.length) return;
+  localTray.pop(); localW=wt(localTray);
+  if(G&&G.state) renderGame(G.state);
+};
+
+window.confirmTray=async function(){
+  if(!G||!G.state||!localTray.length) return;
+  const s=G.state;
+  const isSecond=(s.phase==='second_host'&&ME.role==='host')||(s.phase==='second_guest'&&ME.role==='guest');
+  if(isSecond){
+    const oppW=ME.role==='host'?s.guest.weight:s.host.weight;
+    const minW=Math.max(1,oppW-2);
+    if(localW<minW) return;
+  }
+  // me에 트레이 반영
+  const me={...s[ME.role]};
+  localTray.forEach(t=>{me[t]--;});
+  me.tray=[...localTray]; me.weight=localW;
+
+  // 다음 페이즈
+  let next;
+  if(s.phase==='first_host')       next='second_guest';
+  else if(s.phase==='first_guest') next='second_host';
+  else if(s.phase==='second_host') next='bet_guest'; // 선=guest가 베팅 시작
+  else if(s.phase==='second_guest') next='bet_host'; // 선=host가 베팅 시작
+
+  await set(sRef(roomCode),{
+    ...s, [ME.role]:me, phase:next,
+    hostBet:0, guestBet:0, betState:'open',
+  });
+  localTray=[]; localW=0;
+};
+
+// ── 베팅 ──
+window.doRaise=async function(){
+  if(!G||!G.state) return;
+  const s=G.state;
+  const myKey=ME.role==='host'?'hostBet':'guestBet';
+  const opKey=ME.role==='host'?'guestBet':'hostBet';
+  const myBet=s[myKey], opBet=s[opKey];
+  const el=document.getElementById('bet-in');
+  const amt=parseInt(el?.value||'0');
+  const me={...s[ME.role]};
+  if(isNaN(amt)||amt<=opBet){alert('레이즈는 상대 베팅보다 커야 해');return;}
+  if(amt>me.chips){alert('칩 부족');return;}
+  if(!confirm(`${amt}칩으로 레이즈하시겠습니까?`)) return;
+  const diff=amt-myBet;
+  me.chips-=diff;
+  const nextPhase=ME.role==='host'?'bet_guest':'bet_host';
+  await set(sRef(roomCode),{
+    ...s, [ME.role]:me, [myKey]:amt,
+    phase:nextPhase, pot:s.pot+diff, betState:'raised',
+  });
+};
+
+window.doCall=async function(){
+  if(!G||!G.state) return;
+  const s=G.state;
+  const myKey=ME.role==='host'?'hostBet':'guestBet';
+  const opKey=ME.role==='host'?'guestBet':'hostBet';
+  const myBet=s[myKey], opBet=s[opKey];
+  const me={...s[ME.role]};
+  const diff=opBet-myBet;
+  let newPot=s.pot;
+  if(diff>0){me.chips-=diff; newPot+=diff;}
+
+  if(s.betState==='open'){
+    if(!confirm('체크하시겠습니까?')) return;
+    const nextPhase=ME.role==='host'?'bet_guest':'bet_host';
+    await set(sRef(roomCode),{
+      ...s, [ME.role]:me, [myKey]:opBet,
+      phase:nextPhase, pot:newPot, betState:'checked',
+    });
+  } else if(s.betState==='checked'){
+    if(!confirm('체크하시겠습니까? (승부로 넘어갑니다)')) return;
+    resolveShowdown(s, me, myKey, opBet, newPot);
+  } else {
+    if(!confirm(`${opBet}칩으로 콜하시겠습니까?`)) return;
+    resolveShowdown(s, me, myKey, opBet, newPot);
+  }
+};
+
+async function resolveShowdown(s, me, myKey, opBet, newPot){
+  const winner=compare(s.host.tray, s.guest.tray);
+  const lastPot=newPot;
+  // me.chips는 이미 콜 비용 차감된 상태 → 먼저 반영
+  const newHost={...s.host};
+  const newGuest={...s.guest};
+  if(ME.role==='host') newHost.chips=me.chips;
+  else newGuest.chips=me.chips;
+  // 그 다음 팟을 승자에게 지급
+  if(winner==='host'){newHost.chips+=newPot; newPot=0;}
+  else if(winner==='guest'){newGuest.chips+=newPot; newPot=0;}
+  await set(sRef(roomCode),{
+    ...s, phase:'reveal', [myKey]:opBet,
+    pot:newPot, lastPot:lastPot, winner,
+    host:newHost, guest:newGuest,
+  });
+}
+
+window.doFold=async function(){
+  if(!G||!G.state) return;
+  if(!confirm('폴드하시겠습니까? 상대가 팟을 가져갑니다.')) return;
+  const s=G.state;
+  const opRole=opp();
+  const opPlayer={...s[opRole]};
+  opPlayer.chips+=s.pot;
+  const foldPhase=ME.role==='host'?'fold_host':'fold_guest';
+  await set(sRef(roomCode),{
+    ...s, phase:foldPhase, lastPot:s.pot, pot:0,
+    winner:opRole, [opRole]:opPlayer,
+  });
+};
+
+// ── 다음 라운드 ──
+window.nextRound=async function(){
+  if(!G||!G.state||ME.role!=='host') return;
+  const s=G.state;
+  const prev=s.winner;
+  const firstPlayer=prev==='draw'?s.firstPlayer:(prev||'host');
+  // 무승부면 팟 이월, 아니면 팟 0
+  let pot=prev==='draw'?s.pot:0;
+  // 칩/토끼는 현재 상태 그대로, 트레이만 초기화
+  const nh={...s.host, tray:[], weight:0};
+  const ng={...s.guest, tray:[], weight:0};
+  // 라운드 비용 3칩씩 차감
+  if(nh.chips>=3&&ng.chips>=3){ nh.chips-=3; ng.chips-=3; pot+=6; }
+  // 종료 조건 체크
+  const hRab=nh.gold+nh.silver+nh.bronze;
+  const gRab=ng.gold+ng.silver+ng.bronze;
+  const hOut=nh.chips<=0||hRab===0;
+  const gOut=ng.chips<=0||gRab===0;
+  if(hOut||gOut){
+    await set(sRef(roomCode),{...s,host:nh,guest:ng,gameOver:true});
+    return;
+  }
+  const firstPhase=firstPlayer==='host'?'first_host':'first_guest';
+  await set(sRef(roomCode),{
+    round:s.round+1, phase:firstPhase, betState:'open',
+    firstPlayer, pot,
+    hostBet:0, guestBet:0,
+    winner:null, lastPot:0,
+    host:nh, guest:ng,
+  });
+  localTray=[]; localW=0;
+};
+
+window.restartGame=async function(){
+  if(ME.role!=='host') return;
+  await set(sRef(roomCode),initState());
+  localTray=[]; localW=0;
+};
+
+window.stepBet=function(d){
+  const el=document.getElementById('bet-in'); if(!el) return;
+  const min=parseInt(el.min), max=parseInt(el.max);
+  el.value=Math.max(min,Math.min(max,(parseInt(el.value)||min)+d));
+};
+window.clampBet=function(){
+  const el=document.getElementById('bet-in'); if(!el) return;
+  const min=parseInt(el.min), max=parseInt(el.max);
+  let v=parseInt(el.value); if(isNaN(v)) v=min;
+  el.value=Math.max(min,Math.min(max,v));
+};
+function setErr(msg){const e=document.getElementById('lerr');if(e)e.textContent=msg;}
+
+renderLobby();
+</script>
+</body>
+</html>
